@@ -181,7 +181,7 @@ EXPORT_SYMBOL(unregister_shrinker);
 #define SHRINK_BATCH 128
 /*
  * Call the shrink functions to age shrinkable caches
- *
+ *mem_cgroup_uncharge_end();
  * Here we assume it costs one seek to replace a lru page and that it also
  * takes a seek to recreate a cache object.  With this in mind we age equal
  * percentages of the lru and ageable caches.  This should balance the seeks
