@@ -4,10 +4,11 @@ config XVMALLOC
 
 config ZRAM
 	tristate "Compressed RAM block device support"
+	depends on BLOCK && SYSFS
+	select XVMALLOC
 	select LZO_COMPRESS
 	select LZO_DECOMPRESS
-	select XVMALLOC
-	default n
+	default y
 	help
 	  Creates virtual block devices called /dev/zramX (X = 0, 1, ...).
 	  Pages written to these disks are compressed and stored in memory
@@ -20,16 +21,6 @@ config ZRAM
 	  See zram.txt for more information.
 	  Project home: http://compcache.googlecode.com/
 
-config ZRAM_STATS
-	bool "Enable statistics for compressed RAM disks"
-	depends on ZRAM
-	default y
-	help
-	  Enable statistics collection for compressed RAM devices. Statistics
-	  are exported through ioctl interface, so you have to use zramconfig
-	  program to get them. This adds only a minimal overhead.
-
-	  If unsure, say Y.
 
 config ZCACHE
 	bool "Page cache compression support"
@@ -49,6 +40,15 @@ config ZCACHE
 
 	  Project home: http://compcache.googlecode.com/
 
+config ZRAM_NUM_DEVICES
+	int "Default number of zram devices"
+	depends on ZRAM
+	range 1 32
+	default 1
+	help
+	  Select default number of zram devices. You can override this value
+	  using 'num_devices' module parameter.
+
 config ZRAM_DEBUG
 	bool "Compressed RAM block device debug support"
 	depends on ZRAM
@@ -56,3 +56,4 @@ config ZRAM_DEBUG
 	help
 	  This option adds additional debugging code to the compressed
 	  RAM block device driver.
+
