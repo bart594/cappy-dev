@@ -160,11 +160,7 @@ void deactivate_locked_super(struct super_block *s)
 	struct file_system_type *fs = s->s_type;
 	if (atomic_dec_and_test(&s->s_active)) {
 		fs->kill_sb(s);
-		if (s->cleancache_poolid >= 0) {
-			int cleancache_poolid = s->cleancache_poolid;
-			s->cleancache_poolid = -1; /* avoid races */
-			cleancache_flush_fs(cleancache_poolid);
-		}
+		cleancache_flush_fs(s);
 		put_filesystem(fs);
 		put_super(s);
 	} else {

@@ -191,4 +191,5 @@ especially in an overcommitted system.
 No plans yet, though we agree it sounds useful, at least for
 apps that bypass the page cache (e.g. O_DIRECT).
 
-Last updated: Dan Magenheimer, June 21 2010
+Last updated: Dan Magenheimer, September 2 2010
+
