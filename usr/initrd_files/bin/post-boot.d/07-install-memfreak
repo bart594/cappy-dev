@@ -1,23 +1,14 @@
 #!/bin/sh
 
-mf_filename="memoryfreak-1.25b.apk"
-oc_filename="ocapp1.1.apk"
+filename="memoryfreak-1.25b.apk"
 
-if ! test -e /data/app/$mf_filename; then
+if ! test -e /data/app/$filename; then
  rm /data/app/*memoryfreak*
- cp /bin/$mf_filename /data/app/
- /bin/chown 1000.1000 /data/app/$mf_filename
- /bin/chmod 644 /data/app/$mf_filename
+ cp /bin/$filename /data/app/
+ /bin/chown 1000.1000 /data/app/$filename
+ /bin/chmod 644 /data/app/$filename
 fi
 
-if ! test -e /data/app/$oc_filename; then
- rm /data/app/*ocapp*
- cp /bin/$oc_filename /data/app/
- /bin/chown 1000.1000 /data/app/$oc_filename
- /bin/chmod 644 /data/app/$oc_filename
-fi
-
-rm /bin/$mf_filename
-rm /bin/$oc_filename
+rm /bin/$filename
 
 
