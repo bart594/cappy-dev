@@ -956,4 +956,4 @@ fs_initcall(cpufreq_gov_dbs_init);
 #else
 module_init(cpufreq_gov_dbs_init);
 #endif
-module_exit(cpufreq_gov_dbs_exit;
+module_exit(cpufreq_gov_dbs_exit);
