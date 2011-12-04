@@ -1,16 +1,17 @@
 #!/bin/sh
 
 source /etc/ram.conf
+ZRAMSIZE=$(($ZRAM_SIZE*1024*1024))
 
-if ! test -z $ZRAM_SIZE && test $ZRAM_SIZE -ne "0"; then
- if test -e /lib/modules/lzo_compress.ko; then
+if test -e /lib/modules/lzo_compress.ko; then
    /bin/insmod /lib/modules/lzo_compress.ko
    /bin/insmod /lib/modules/lzo_decompress.ko
- fi
- /bin/insmod /lib/modules/zram.ko num_devices=1
- /sbin/zramconfig /dev/block/zram0 --disksize_kb `expr $ZRAM_SIZE \* 1024`
- /sbin/zramconfig /dev/block/zram0 --init
- mkswap /dev/block/zram0
- swapon /dev/block/zram0
 fi
+
+/bin/insmod /lib/modules/zram.ko 
+	echo 1 > /sys/block/zram0/reset
+	echo $ZRAMSIZE  > /sys/block/zram0/disksize
+	
+	mkswap /dev/block/zram0
+	swapon /dev/block/zram0
 
