@@ -51,8 +51,8 @@ config CPU_1300
 config CPU_1200
        bool "1200mhz Overclock"
 
-config CPU_UV
-       bool "1000mhz No-OC"
+config LIVE_OC
+       bool "1000mhz LIVE OC"
 
 endchoice
 
