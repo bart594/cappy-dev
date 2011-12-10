@@ -263,11 +263,8 @@ module_param_array_named(adj, lowmem_adj, int, &lowmem_adj_size,
 module_param_array_named(minfree, lowmem_minfree, uint, &lowmem_minfree_size,
 			 S_IRUGO | S_IWUSR);
 module_param_named(debug_level, lowmem_debug_level, uint, S_IRUGO | S_IWUSR);
-module_param_named(check_filepages , lowmem_check_filepages, uint,
-		   S_IRUGO | S_IWUSR);
-module_param_array_named(minfile, lowmem_minfile, uint, &lowmem_minfile_size,
-			 S_IRUGO | S_IWUSR);
-
+			 
+			 
 #ifdef CONFIG_SWAP
 module_param_named(fudgeswap, fudgeswap, int, S_IRUGO | S_IWUSR);
 #endif
