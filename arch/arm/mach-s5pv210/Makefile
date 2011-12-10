@@ -43,6 +43,7 @@ obj-$(CONFIG_MACH_ARIES)	+= dev-s1-phone.o
 
 obj-$(CONFIG_CPU_FREQ)		+= cpu-freq.o
 obj-$(CONFIG_S5PV210_SETUP_SDHCI)       += setup-sdhci.o
+obj-$(CONFIG_LIVE_OC)    += live_oc.o
 
 # device support
 
@@ -59,6 +60,5 @@ obj-$(CONFIG_S5PV210_SETUP_FIMC0)	+= setup-fimc0.o
 obj-$(CONFIG_S5PV210_SETUP_FIMC1)	+= setup-fimc1.o
 obj-$(CONFIG_S5PV210_SETUP_FIMC2)	+= setup-fimc2.o
 obj-$(CONFIG_S5PV210_SETUP_CSIS)	+= setup-csis.o
-
-
 obj-$(CONFIG_CPU_IDLE)		+= cpuidle.o didle.o
+
