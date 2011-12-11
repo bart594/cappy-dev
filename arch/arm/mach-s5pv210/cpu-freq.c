@@ -141,7 +141,7 @@ static u32 clkdiv_val[5][11] = {
 	 * HCLK_DSYS, PCLK_DSYS, HCLK_PSYS, PCLK_PSYS, ONEDRAM,
 	 * MFC, G3D }
 	 */
-#ifdef CONFIG_CPU_UV
+#ifdef CONFIG_LIVE_OC
 	/* L0 : [1000/200/200/100][166/83][133/66][200/200] */
 	{0, 4, 4, 1, 3, 1, 4, 1, 3, 0, 0},
 #else
@@ -492,7 +492,12 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 	unsigned int pll_changing = 0;
 	unsigned int bus_speed_changing = 0;
 
+#ifdef CONFIG_LIVE_OC
+	if (!mutex_trylock(&set_freq_lock))
+		goto no_lock;
+#else
 	mutex_lock(&set_freq_lock);
+#endif
 
 	cpufreq_debug_printk(CPUFREQ_DEBUG_DRIVER, KERN_INFO,
 			"cpufreq: Entering for %dkHz\n", target_freq);
@@ -788,6 +793,9 @@ static int s5pv210_cpufreq_target(struct cpufreq_policy *policy,
 		first_run = false;
 out:
 	mutex_unlock(&set_freq_lock);
+	#ifdef CONFIG_LIVE_OC
+	no_lock:
+	#endif
 	return ret;
 }
 
@@ -1029,7 +1037,7 @@ static int s5pv210_cpufreq_notifier_event(struct notifier_block *this,
 	    max = policy->max;
 	    min = policy->min;
 #ifdef CONFIG_LIVE_OC
-		policy->max = policy->min = SLEEP_FREQ;
+		policy->max = policy->min = sleep_freq;
 		ret = cpufreq_driver_target(cpufreq_cpu_get(0), sleep_freq,
 				DISABLE_FURTHER_CPUFREQ);
 #else
