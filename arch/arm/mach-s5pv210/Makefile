@@ -44,6 +44,7 @@ obj-$(CONFIG_MACH_ARIES)	+= dev-s1-phone.o
 obj-$(CONFIG_CPU_FREQ)		+= cpu-freq.o
 obj-$(CONFIG_S5PV210_SETUP_SDHCI)       += setup-sdhci.o
 obj-$(CONFIG_LIVE_OC)    += live_oc.o
+obj-$(CONFIG_CUSTOM_VOLTAGE) += custom_voltage.o
 
 # device support
 
