@@ -2,6 +2,7 @@
 
 source /etc/ram.conf
 ZRAMSIZE=$(($ZRAM_SIZE*1024*1024))
+FUDGESWAP=$(($ZRAM_SIZE*1024 / 6))
 
 if test -e /lib/modules/lzo_compress.ko; then
    /bin/insmod /lib/modules/lzo_compress.ko
@@ -15,4 +16,4 @@ fi
 	mkswap /dev/block/zram0
 	swapon /dev/block/zram0
 
-echo 'expr $ZRAMSIZE / 6' > /sys/module/lowmemorykiller/parameters/fugeswap
+echo $FUDGESWAP > /sys/module/lowmemorykiller/parameters/fudgeswap
