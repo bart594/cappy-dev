@@ -947,7 +947,7 @@ EXPORT_SYMBOL(liveoc_update);
 static int __init s5pv210_cpufreq_driver_init(struct cpufreq_policy *policy)
 {
 	u32 rate ;
-	int i, level = CPUFREQ_TABLE_END;
+	int i, level = CPUFREQ_TABLE_END, ret;
 	struct clk *mpll_clk;
 
 	pr_info("S5PV210 CPUFREQ Initialising...\n");
@@ -1022,8 +1022,11 @@ static int __init s5pv210_cpufreq_driver_init(struct cpufreq_policy *policy)
 	liveoc_init();
 #endif
 
-	/* TODO: Re-add safe boot for overclock versions */
-	return cpufreq_frequency_table_cpuinfo(policy, freq_table);
+	
+	ret = cpufreq_frequency_table_cpuinfo(policy, freq_table);
+  	if (!ret)
+      		policy->max = 1000000;
+  	return ret;
 }
 
 static int s5pv210_cpufreq_notifier_event(struct notifier_block *this,
@@ -1040,11 +1043,11 @@ static int s5pv210_cpufreq_notifier_event(struct notifier_block *this,
 	    min = policy->min;
 #ifdef CONFIG_LIVE_OC
 		policy->max = policy->min = sleep_freq;
-		ret = cpufreq_driver_target(cpufreq_cpu_get(0), sleep_freq,
+		ret = cpufreq_driver_target(policy, sleep_freq,
 				DISABLE_FURTHER_CPUFREQ);
 #else
 		policy->max = policy->min = SLEEP_FREQ;
-		ret = cpufreq_driver_target(cpufreq_cpu_get(0), SLEEP_FREQ,
+		ret = cpufreq_driver_target(policy, SLEEP_FREQ,
 				DISABLE_FURTHER_CPUFREQ);
 #endif
 		if (ret < 0)
@@ -1053,10 +1056,10 @@ static int s5pv210_cpufreq_notifier_event(struct notifier_block *this,
 	case PM_POST_RESTORE:
 	case PM_POST_SUSPEND:
 #ifdef CONFIG_LIVE_OC
-		cpufreq_driver_target(cpufreq_cpu_get(0), sleep_freq,
+		cpufreq_driver_target(policy, sleep_freq,
 				ENABLE_FURTHER_CPUFREQ);
 #else
-		cpufreq_driver_target(cpufreq_cpu_get(0), SLEEP_FREQ,
+		cpufreq_driver_target(policy, SLEEP_FREQ,
 				ENABLE_FURTHER_CPUFREQ);
 #endif
 		policy->max = max;
