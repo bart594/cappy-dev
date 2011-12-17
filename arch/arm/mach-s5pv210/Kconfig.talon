@@ -35,6 +35,12 @@ config GPU_OC
        help 
          Enables GPU overclock for SGX540 (for future use)
 
+config CUSTOM_VOLTAGE
+       bool "Support for Custom Voltage"
+       default y
+       help
+       Say Y here to enable Custom Voltage
+
 choice
 	prompt "Frequency Choices"
 	default CPU_1200
