@@ -38,14 +38,13 @@
 
 
 #define SEC_ADJUST_LMK
-#define DEBUG_LEVEL_DEATHPENDING 6
+
 
 #ifdef CONFIG_SWAP
 #include <linux/fs.h>
 #include <linux/swap.h>
 #endif
 
-#define DEBUG_LEVEL_DEATHPENDING 6
 
 static uint32_t lowmem_debug_level = 2;
 static int lowmem_adj[6] = {
