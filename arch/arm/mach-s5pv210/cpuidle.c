@@ -284,11 +284,11 @@ static void s5p_enter_didle(void)
 
 	/*
 	 * Wakeup source configuration for didle
-	 * RTC TICK and I2S are enabled as wakeup sources
+	 * RTC ALARM, RTC TICK, KEY, I2S and ST are enabled as wakeup sources
 	 */
 	tmp = __raw_readl(S5P_WAKEUP_MASK);
 	tmp |= 0xffff;
-	tmp &= ~((1<<2) | (1<<13));
+	tmp &= ~((1<<1) | (1<<2) | (1<<5) | (1<<13) | (1<<14));
 	__raw_writel(tmp, S5P_WAKEUP_MASK);
 
 	/*
