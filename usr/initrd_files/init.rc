@@ -817,3 +817,6 @@ service tvout /system/bin/tvoutserver
 
 service post_boot /bin/post-boot.sh
      oneshot
+
+on property:sys.boot_completed=1
+stop bootanim
