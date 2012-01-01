@@ -28,7 +28,12 @@ config DISABLE_PRINTK
        depends on EXPERIMENTAL
        help
          Disable printk completely in the kernel to reduce overhead
-
++config BLX
+       bool "Support for Battery Life eXtender"
+       default y
+       help
+       Say Y here to enable Battery Life eXtender
+		 
 config GPU_OC
        bool "enable GPU Overclock"
        default n
