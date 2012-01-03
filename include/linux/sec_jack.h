@@ -52,6 +52,13 @@ struct sec_jack_platform_data {
 	int	num_buttons_zones;
 	int	det_gpio;
 	int	send_end_gpio;
+  
+  #if defined(CONFIG_GALAXY_I897)
+  // [[ HDLNC_BP_pyoungkuenoh_20110223
+    int   send_end_gpio_35; 
+  // ]] HDLNC_BP_pyoungkuenoh_20110223  
+  #endif
+  
 	bool	det_active_high;
 	bool	send_end_active_high;
 };

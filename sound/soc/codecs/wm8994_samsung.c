@@ -40,6 +40,13 @@
 #include <plat/gpio-cfg.h>
 #include <mach/regs-clock.h>
 #include "wm8994_samsung.h"
+//[mook_GB : add in audience
+#ifdef CONFIG_GALAXY_I897
+#include "A1026_regs.h"
+#include "A1026_dev.h"
+#include "A1026_i2c_drv.h"
+#endif
+//]mook_GB : add in audience
 #ifdef CONFIG_SND_VOODOO
 #include "wm8994_voodoo.h"
 #endif
@@ -53,6 +60,16 @@
 
 #if defined(CONFIG_VIDEO_TV20) && defined(CONFIG_SND_S5P_WM8994_MASTER)
 #define HDMI_USE_AUDIO
+#endif
+static struct wm8994_priv *localwm8994; //hdlnc_bp_ysyim
+#ifdef CONFIG_GALAXY_I897
+//[mook_GB : add in audience
+extern int a1026_mode_status;
+int wm8994_get_TTY_Status(void);
+int wm8994_get_HAC_Status(void);
+int wm8994_get_AUDIENCE_Status(void);
+int wm8994_get_FAC_SUB_MIC_Status(void);
+//]mook_GB : add in audience
 #endif
 
 /*
@@ -187,10 +204,9 @@ int wm8994_write(struct snd_soc_codec *codec, unsigned int reg,
 	 */
 
 #if defined(CONFIG_ARIES_NTT)
-	//ssong100903. WM8994 Applications Issue Report CE000681 Changing digital path or clock enable bits when active may result in no sound output 
-	if(reg == 0x5) value |= 0x3303;
+        //ssong100903. WM8994 Applications Issue Report CE000681 Changing digital path or clock enable bits when active may result in no sound output
+        if(reg == 0x5) value |= 0x3303;
 #endif
-
 #ifdef CONFIG_SND_VOODOO
 	value = voodoo_hook_wm8994_write(codec, reg, value);
 #endif
@@ -549,6 +565,60 @@ static int wm8994_set_codec_tuning(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+#ifdef CONFIG_GALAXY_I897
+int wm8994_get_TTY_Status(void)
+{
+    if(localwm8994->TTY_state)
+        {
+        printk("mook - TTY is ON\n");
+        }
+    else
+        {
+        printk("mook - TTY is OFF\n");
+        }
+    return localwm8994->TTY_state;
+}
+int wm8994_get_HAC_Status(void)
+{
+    if(localwm8994->HAC_state)
+        {
+        printk("HAC mode is ON\n");
+        }
+    else
+        {
+        printk("HAC mode is OFF\n");
+        }
+    return localwm8994->HAC_state;
+}
+//[mook_GB : add in audience
+int wm8994_get_AUDIENCE_Status(void)
+{
+    if(localwm8994->AUDIENCE_state)
+        {
+        printk("AUDIENCE mode is ON\n");
+		DEBUG_LOG("AUDIENCE_state is ON");
+        }
+    else
+        {
+        printk("AUDIENCE mode is OFF\n");
+		DEBUG_LOG("AUDIENCE_state is OFF");
+        }
+    return localwm8994->AUDIENCE_state;
+}
+int wm8994_get_FAC_SUB_MIC_Status(void)
+{
+    if(localwm8994->Fac_SUB_MIC_state)
+    {
+		printk("Fac SUB Mic state on\n");
+    }
+    else
+    {
+        printk("Fac SUB Mic state off\n");
+    }
+    return localwm8994->Fac_SUB_MIC_state;
+}
+//]mook_GB : add in audience
+#endif
 static int wm8994_get_codec_status(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
@@ -601,7 +671,33 @@ static int wm8994_set_codec_status(struct snd_kcontrol *kcontrol,
 		tempstream.stream = SNDRV_PCM_STREAM_PLAYBACK;
 		wm8994_shutdown(&tempstream, codec_dai);
 		break;
+#ifdef CONFIG_GALAXY_I897
+	case CMD_TTY_OFF:
+		wm8994->TTY_state = TTY_OFF;
+		printk("mook - wm8994 TTY Off\n");
+		break;
+	case CMD_TTY_ON:
+		wm8994->TTY_state = TTY_ON;
+		printk("mook - wm8994 TTY On\n");
+		break;
+	case CMD_AUDIENCE_OFF:
+		wm8994->AUDIENCE_state = AUDIENCE_OFF;
+		printk("wm8994 AUDIENCE Off\n");
+		break;
+	case CMD_AUDIENCE_ON:
+		wm8994->AUDIENCE_state = AUDIENCE_ON;
+		printk("wm8994 AUDIENCE On\n");
+		break;
+	case CMD_FACTORY_SUB_MIC_ON:
+		wm8994->Fac_SUB_MIC_state = FAC_SUB_MIC_ON;
+		printk("wm8994 factory sub mic on \n");
+		break;
+	case CMD_FACTORY_SUB_MIC_OFF:
+		wm8994->Fac_SUB_MIC_state = FAC_SUB_MIC_OFF;
+		printk("wm8994 factory sub mic off\n");
+		break;
 
+#endif
 	default:
 		break;
 	}
@@ -662,7 +758,23 @@ static int wm8994_set_voice_path(struct snd_kcontrol *kcontrol,
 		return -ENODEV;
 		break;
 	}
-
+#ifdef CONFIG_GALAXY_I897
+//[mook_GB : add in audience
+	A1026Wakeup();
+	if (wm8994->cur_path != path_num ||
+			!(wm8994->codec_state & CALL_ACTIVE) || 
+			(wm8994->cur_audience != wm8994->AUDIENCE_state)
+	) {
+		wm8994->codec_state |= CALL_ACTIVE;
+		wm8994->cur_path = path_num;
+		wm8994->cur_audience = wm8994->AUDIENCE_state;
+	if(wm8994_get_FAC_SUB_MIC_Status())
+		wm8994_set_voicecall_factory_subMIC(codec);
+	else if(wm8994_get_AUDIENCE_Status() && (path_num==RCV)) wm8994_set_voicecall_receiver_audience(codec); //hdlnc_ldj_0417_A1026
+	else if(wm8994_get_TTY_Status() && (path_num==HP)) wm8994_set_voicecall_tty(codec);
+	else
+			wm8994->universal_voicecall_path[wm8994->cur_path] (codec);
+#else
 	if (wm8994->cur_path != path_num ||
 			!(wm8994->codec_state & CALL_ACTIVE)
 #ifdef CONFIG_ARIES_NTT /* ssong110320. BT voicecall - second incoming call mute error. */
@@ -678,6 +790,7 @@ static int wm8994_set_voice_path(struct snd_kcontrol *kcontrol,
 			wm8994->universal_voicecall_path[wm8994->cur_path] (codec);
 #else
 		wm8994->universal_voicecall_path[wm8994->cur_path] (codec);
+	#endif
 #endif
 
 	} else {
@@ -1304,6 +1417,7 @@ static int wm8994_startup(struct snd_pcm_substream *substream,
 {
 	struct snd_soc_codec *codec = codec_dai->codec;
 	struct wm8994_priv *wm8994 = codec->drvdata;
+	int val;
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
 		wm8994->stream_state |=  PCM_STREAM_PLAYBACK;
@@ -1317,6 +1431,19 @@ static int wm8994_startup(struct snd_pcm_substream *substream,
 				wm8994->power_state);
 
 		/* For initialize codec */
+#if defined(CONFIG_GALAXY_I897)
+		wm8994_write(codec, 0x039, 0x006C);
+		wm8994_write(codec, WM8994_POWER_MANAGEMENT_1,
+				WM8994_VMID_SEL_NORMAL | WM8994_BIAS_ENA);
+		msleep(50);
+		wm8994_write(codec, 0x102, 0x0003);
+		wm8994_write(codec, 0x817, 0x0000);
+		wm8994_write(codec, 0x102, 0x0000);
+		val = wm8994_read(codec, WM8994_POWER_MANAGEMENT_5);
+		val &= ~(WM8994_AIF2DACL_ENA_MASK | WM8994_AIF2DACR_ENA_MASK); // |WM8994_DAC1L_ENA_MASK | WM8994_DAC1R_ENA_MASK);
+		val |= WM8994_AIF2DACL_ENA | WM8994_AIF2DACR_ENA;	       // |WM8994_DAC1L_ENA_MASK | WM8994_DAC1R_ENA_MASK;
+		wm8994_write(codec, WM8994_POWER_MANAGEMENT_5, val);
+#else
 		wm8994_write(codec, WM8994_POWER_MANAGEMENT_1,
 				0x3 << WM8994_VMID_SEL_SHIFT | WM8994_BIAS_ENA);
 		msleep(50);
@@ -1333,6 +1460,7 @@ static int wm8994_startup(struct snd_pcm_substream *substream,
 		wm8994_write(codec, 0X817, 0X0000);
 		wm8994_write(codec, 0X102, 0X0000);
 		*/
+#endif
 #endif
 		wm8994_write(codec, WM8994_OVERSAMPLING, 0x0000);
 	} else
@@ -1395,11 +1523,23 @@ void wm8994_shutdown(struct snd_pcm_substream *substream,
 	if ((wm8994->codec_state == DEACTIVE) &&
 			(wm8994->stream_state == PCM_STREAM_DEACTIVE)) {
 		DEBUG_LOG("Turn off Codec!!");
+// HDLNC_OPK_20110513 : To prevent popup noise when hold button on voicecall_bluetooth
+#if defined(CONFIG_GALAXY_I897)
+		val = wm8994_read(codec, WM8994_POWER_MANAGEMENT_5);
+		val &= ~(WM8994_AIF2DACL_ENA_MASK | WM8994_AIF2DACR_ENA_MASK);// | WM8994_DAC1L_ENA_MASK | WM8994_DAC1R_ENA_MASK);
+		wm8994_write(codec, WM8994_POWER_MANAGEMENT_5, val);
+#endif
 		wm8994->pdata->set_mic_bias(false);
 		wm8994->power_state = CODEC_OFF;
 		wm8994->fmradio_path = FMR_OFF;
 		wm8994->cur_path = OFF;
 		wm8994->rec_path = MIC_OFF;
+#ifdef CONFIG_GALAXY_I897
+//[mook_GB : add in audience
+				A1026Sleep();
+				a1026_mode_status=-1;
+#endif
+//]mook_GB : add in audience
 		wm8994_write(codec, WM8994_SOFTWARE_RESET, 0x0000);
 		vtcall_active = VT_OFF;
 		return;
@@ -1446,7 +1586,11 @@ static int wm8994_pcm_startup(struct snd_pcm_substream *substream,
 			WM8994_FLL1_FRACN_ENA | WM8994_FLL1_ENA);
 
 		reg = wm8994_read(codec, WM8994_AIF1_CLOCKING_1);
+		#ifdef CONFIG_GALAXY_I897
+		reg |= (WM8994_AIF1CLK_SRC_FLL1 );
+		#else
 		reg |= (WM8994_AIF1CLK_SRC_FLL1 | WM8994_AIF1CLK_ENA);
+		#endif
 		wm8994_write(codec, WM8994_AIF1_CLOCKING_1, reg);
 
 		/* Enable clocks to the Audio core and sysclk of wm8994	*/
@@ -1455,6 +1599,10 @@ static int wm8994_pcm_startup(struct snd_pcm_substream *substream,
 			WM8994_DSP_FS1CLK_ENA_MASK);
 		reg |= (WM8994_DSP_FS1CLK_ENA | WM8994_DSP_FSINTCLK_ENA);
 		wm8994_write(codec, WM8994_CLOCKING_1, reg);
+		#ifdef CONFIG_GALAXY_I897
+   		wm8994_write(codec, WM8994_POWER_MANAGEMENT_5, 0x3303);
+    	wm8994_write(codec, WM8994_AIF1_CLOCKING_1, 0x11);
+		#endif
 	} else
 		DEBUG_LOG("Already turned on codec!!");
 
@@ -3144,7 +3292,11 @@ static int wm8994_init(struct wm8994_priv *wm8994_private,
 		return -ENOMEM;
 
 	wm8994 = codec->drvdata;
-
+#if defined(CONFIG_GALAXY_I897)
+//[mook_GB : add in audience
+	localwm8994=wm8994;
+//]mook_GB : add in audience
+#endif
 	mutex_init(&codec->mutex);
 	INIT_LIST_HEAD(&codec->dapm_widgets);
 	INIT_LIST_HEAD(&codec->dapm_paths);
@@ -3398,11 +3550,29 @@ static int wm8994_probe(struct platform_device *pdev)
 {
 	struct snd_soc_device *socdev = platform_get_drvdata(pdev);
 	struct wm8994_setup_data *setup;
-
+//[mook_GB : add in audience
+#if defined(CONFIG_GALAXY_I897)
+	struct a1026_setup_data *setup_a1026;
+#endif
+//]mook_GB : add in audience
 	int ret = 0;
 
 	pr_info("%s: WM8994 Audio Codec %s\n", __func__, WM8994_VERSION);
+//[mook_GB : add in audience
+#if defined(CONFIG_GALAXY_I897)
+	A1026_dev_mutex_init();
+//    Add the i2c driver
+    if ( (ret = A1026_i2c_drv_init() < 0) )
+    {
+    	error("A1026_driver_init i2c driver failed");
+       return ret;
+    }
 
+    debug("A1026_driver_init successful");
+	A1026_dev_powerup();
+	A1026Sleep();
+#endif
+//]mook_GB : add in audience
 	setup = socdev->codec_data;
 	wm8994_socdev = socdev;
 #if defined(CONFIG_I2C) || defined(CONFIG_I2C_MODULE)

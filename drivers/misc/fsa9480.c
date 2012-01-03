@@ -116,6 +116,10 @@ struct fsa9480_usbsw {
 
 static struct fsa9480_usbsw *local_usbsw;
 
+#ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
+extern u16 askonstatus;
+extern u16 inaskonstatus;
+#endif
 static ssize_t fsa9480_show_control(struct device *dev,
 				   struct device_attribute *attr,
 				   char *buf)
@@ -394,8 +398,16 @@ static void fsa9480_detect_dev(struct fsa9480_usbsw *usbsw)
 		/* USB */
 		if (usbsw->dev1 & DEV_T1_USB_MASK ||
 				usbsw->dev2 & DEV_T2_USB_MASK) {
+#ifndef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE				
 			if (pdata->usb_cb)
 				pdata->usb_cb(FSA9480_DETACHED);
+#else
+			if (pdata->usb_cb){
+				askonstatus=0;
+				inaskonstatus=0;
+				pdata->usb_cb(FSA9480_DETACHED);
+				}
+#endif
 		/* UART */
 		} else if (usbsw->dev1 & DEV_T1_UART_MASK ||
 				usbsw->dev2 & DEV_T2_UART_MASK) {

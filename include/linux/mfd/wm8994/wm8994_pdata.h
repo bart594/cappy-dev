@@ -18,6 +18,9 @@
 struct wm8994_platform_data {
 	int ldo;
 	void (*set_mic_bias)(bool on);
+	#if defined(CONFIG_GALAXY_I897)
+	void (*set_submic_bias)(bool on);
+  #endif
 };
 
 #endif
