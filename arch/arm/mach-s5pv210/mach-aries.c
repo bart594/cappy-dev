@@ -760,6 +760,92 @@ static struct max8998_regulator_data aries_regulators[] = {
 	{ MAX8998_BUCK4, &aries_buck4_data },
 };
 
+#if defined (CONFIG_GALAXY_I897)
+static struct max8998_adc_table_data temper_table[] =  {
+	/* ADC, Temperature (C) */
+	{ 206,		700	},		
+	{ 220,		690	},	
+	{ 234,		680	},		
+	{ 248,		670	},	
+	{ 262,		660	},	
+	{ 276,		650	},	
+	{ 290,		640	},	
+	{ 304,		630	},
+	{ 314,		620	},	
+	{ 323,		610	},
+	{ 337,		600	},
+	{ 351,		590	},
+	{ 364,		580	},
+	{ 379,		570	},
+	{ 395,		560	},
+	{ 408,		550	},
+	{ 423,		540	},	
+	{ 438,		530	},
+	{ 453,		520	},
+	{ 465,		510	},
+	{ 478,		500	},
+	{ 495,		490	},
+	{ 513,		480	},
+	{ 528,		470	},
+	{ 544,		460	},
+	{ 564,		450	},
+	{ 584,		440	},
+	{ 602,		430	},
+	{ 621,		420	},
+	{ 643,		410	},
+	{ 665,		400	},
+	{ 682,		390	},
+	{ 702,		380	},
+	{ 729,		370	},
+	{ 752,		360	},
+	{ 775,		350	},
+	{ 798,		340	},
+	{ 821,		330	},	
+	{ 844,		320	},
+	{ 867,		310	},
+	{ 890,		300	},
+	{ 913,		290	},
+	{ 936,		280	},
+	{ 959,		270	},
+	{ 982,		260	},
+	{ 1005,		250	},
+	{ 1028,		240	},
+	{ 1051,		230	},
+	{ 1074,		220	},
+	{ 1097,		210	},
+	{ 1120,		200	},
+	{ 1143,		190	},
+	{ 1166,		180	},
+	{ 1189,		170	},
+	{ 1212,		160	},
+	{ 1235,		150	},
+	{ 1258,		140	},
+	{ 1281,		130	},
+	{ 1304,		120	},
+	{ 1327,		110	},
+	{ 1350,		100	},	
+	{ 1373,		90	},
+	{ 1396,		80	},
+	{ 1419,		70	},
+	{ 1442,		60	},
+	{ 1465,		50	},	
+	{ 1484,		40	}, 
+	{ 1504,		30	}, 
+	{ 1526,		20	}, 
+	{ 1543,		10	}, // +10
+	{ 1567,		0	}, // 10
+	{ 1569,		-10	}, 
+	{ 1592,		-20	}, 
+	{ 1613,		-30	}, 
+	{ 1633,		-40	}, 
+	{ 1653,		-50	}, 
+	{ 1654,		-60	}, 	
+	{ 1671,		-70	}, 
+	{ 1691,		-80	}, 
+	{ 1711,		-90	}, 
+	{ 1731,		-100}, // 0
+};
+#else
 static struct max8998_adc_table_data temper_table[] =  {
 	{  264,  650 },
 	{  275,  640 },
@@ -849,6 +935,7 @@ static struct max8998_adc_table_data temper_table[] =  {
 	{ 1658,  -60 },
 	{ 1667,  -70 }, 
 };
+#endif
 struct max8998_charger_callbacks *charger_callbacks;
 static enum cable_type_t set_cable_status;
 
@@ -1091,7 +1178,7 @@ static struct platform_device s3c_device_i2c7 = {
 	.dev.platform_data	= &i2c7_platdata,
 };
 // For FM radio
-#if !defined(CONFIG_ARIES_NTT)
+#if !defined(CONFIG_GALAXY_I897)
 static struct i2c_gpio_platform_data i2c8_platdata = {
 	.sda_pin		= GPIO_FM_SDA_28V,
 	.scl_pin		= GPIO_FM_SCL_28V,
@@ -1168,6 +1255,24 @@ static struct platform_device s3c_device_i2c12 = {
 	.dev.platform_data	= &i2c12_platdata,
 };
 
+#if defined(CONFIG_GALAXY_I897)
+static	struct	i2c_gpio_platform_data	i2c13_platdata = {
+	.sda_pin		= GPIO_A1026_SDA,
+	.scl_pin		= GPIO_A1026_SCL,
+	.udelay			= 1,	/* 250KHz */		
+	.sda_is_open_drain	= 0,
+	.scl_is_open_drain	= 0,
+	.scl_is_output_only	= 0,
+};
+
+static struct platform_device s3c_device_i2c13 = {
+	.name				= "i2c-gpio",
+	.id					= 13,
+	.dev.platform_data	= &i2c13_platdata,
+};
+#endif
+
+#if !defined(CONFIG_GALAXY_I897)
 static struct i2c_gpio_platform_data i2c14_platdata = {
 	.sda_pin		= NFC_SDA_18V,
 	.scl_pin		= NFC_SCL_18V,
@@ -1183,6 +1288,7 @@ static struct platform_device s3c_device_i2c14 = {
 	.dev.platform_data	= &i2c14_platdata,
 };
 
+#endif
 static void touch_keypad_gpio_init(void)
 {
 	int ret = 0;
@@ -1227,6 +1333,20 @@ static struct touchkey_platform_data touchkey_data = {
 };
 
 static struct gpio_event_direct_entry aries_keypad_key_map[] = {
+#if defined(CONFIG_GALAXY_I897)	
+	{
+		.gpio	= S5PV210_GPH2(6),
+		.code	= KEY_POWER,
+	},
+	{
+		.gpio	= S5PV210_GPH3(1),
+		.code	= KEY_VOLUMEDOWN,
+	},
+	{
+		.gpio	= S5PV210_GPH3(2),
+		.code	= KEY_VOLUMEUP,
+	}
+#else
 	{
 		.gpio	= S5PV210_GPH2(6),
 		.code	= KEY_POWER,
@@ -1243,6 +1363,7 @@ static struct gpio_event_direct_entry aries_keypad_key_map[] = {
 		.gpio	= S5PV210_GPH3(5),
 		.code	= KEY_HOME,
 	}
+#endif
 };
 
 static struct gpio_event_input_info aries_keypad_key_info = {
@@ -1288,22 +1409,40 @@ static struct s3c_adc_mach_info s3c_adc_platform __initdata = {
 /* There is a only common mic bias gpio in aries H/W */
 static DEFINE_SPINLOCK(mic_bias_lock);
 static bool wm8994_mic_bias;
+#if defined(CONFIG_GALAXY_I897)
+static bool wm8994_submic_bias;
+bool jack_mic_bias;
+EXPORT_SYMBOL(jack_mic_bias);
+#else
 static bool jack_mic_bias;
+#endif
 static void set_shared_mic_bias(void)
 {
-#if !defined(CONFIG_ARIES_NTT)
 #if defined(CONFIG_GALAXY_I897)
-        gpio_set_value(GPIO_MICBIAS_EN, wm8994_mic_bias);
-        gpio_set_value(GPIO_EAR_MICBIAS_EN, jack_mic_bias);
+
+if( ( HWREV == 0x04 ) || ( HWREV == 0x08 ) || ( HWREV == 0x0C ) || ( HWREV == 0x02 ) || ( HWREV == 0x0A ) )
+	{
+		gpio_set_value(GPIO_MICBIAS_EN ,jack_mic_bias || wm8994_mic_bias);
+		gpio_set_value(GPIO_EARPATH_SEL, wm8994_mic_bias || jack_mic_bias);
+	}
+	else
+	{
+		gpio_set_value(GPIO_MICBIAS_EN, wm8994_mic_bias);   // GPJ4(2)
+		gpio_set_value(GPIO_EARMICBIAS_EN, jack_mic_bias);	// GPJ4(4) : Use earMicbias since hwrev-0.5
+		gpio_set_value(GPIO_EARPATH_SEL, wm8994_mic_bias || jack_mic_bias);
+	}
 #else
+// ]] HDLNC_BP_pyoungkuenoh_20110223	
+#if !defined(CONFIG_ARIES_NTT)
 	gpio_set_value(GPIO_MICBIAS_EN, wm8994_mic_bias || jack_mic_bias);
-#endif
+
 #else
 	gpio_set_value(GPIO_MICBIAS_EN, wm8994_mic_bias);
 	gpio_set_value(GPIO_SUB_MICBIAS_EN, jack_mic_bias);
 #endif
 	/* high : earjack, low: TV_OUT */
 	gpio_set_value(GPIO_EARPATH_SEL, wm8994_mic_bias || jack_mic_bias);
+#endif
 }
 
 static void wm8994_set_mic_bias(bool on)
@@ -1315,6 +1454,16 @@ static void wm8994_set_mic_bias(bool on)
 	spin_unlock_irqrestore(&mic_bias_lock, flags);
 }
 
+#if defined(CONFIG_GALAXY_I897)
+static void wm8994_set_submic_bias(bool on)
+{
+	unsigned long flags;
+	spin_lock_irqsave(&mic_bias_lock, flags);
+	wm8994_submic_bias = on;
+	set_shared_mic_bias();
+	spin_unlock_irqrestore(&mic_bias_lock, flags);
+}
+#endif
 static void sec_jack_set_micbias_state(bool on)
 {
 	unsigned long flags;
@@ -1328,6 +1477,9 @@ static void sec_jack_set_micbias_state(bool on)
 static struct wm8994_platform_data wm8994_pdata = {
 	.ldo = GPIO_CODEC_LDO_EN,
 	.set_mic_bias = wm8994_set_mic_bias,
+#if defined(CONFIG_GALAXY_I897)
+	.set_submic_bias = wm8994_set_submic_bias
+#endif
 };
 
 /*
@@ -2105,6 +2257,9 @@ static int s5ka3dfx_power_off(void)
 		return -EINVAL;
 	}*/
 
+	// Turn CAM_SENSOR_A_2.8V(VDDA) off
+	gpio_direction_output(GPIO_GPB7, 1);
+	gpio_set_value(GPIO_GPB7, 0);
 	gpio_free(GPIO_GPB7);
 	gpio_free(GPIO_CAM_VGA_nRST);
 	gpio_free(GPIO_CAM_VGA_nSTBY);
@@ -2326,12 +2481,21 @@ static struct i2c_board_info i2c_devs8[] __initdata = {
 static int fsa9480_init_flag = 0;
 static bool mtp_off_status;
 
+#ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
+extern u16 askonstatus;
+void fsa9480_usb_cb(bool attached)
+#else
 static void fsa9480_usb_cb(bool attached)
+#endif
 {
 	struct usb_gadget *gadget = platform_get_drvdata(&s3c_device_usbgadget);
 
+#ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
+	if ((gadget) && (askonstatus != 0xabcd)) {
+#else
 	if (gadget) {
 
+#endif
 		if (attached)
 			usb_gadget_vbus_connect(gadget);
 		else
@@ -2467,8 +2631,8 @@ static void max17040_power_supply_unregister(struct power_supply *psy)
 static struct max17040_platform_data max17040_pdata = {
 	.power_supply_register = max17040_power_supply_register,
 	.power_supply_unregister = max17040_power_supply_unregister,
-#if defined(CONFIG_ARIES_NTT)
-	.rcomp_value = 0xC000,
+#if defined(CONFIG_GALAXY_I897)
+	.rcomp_value = 0xD000,
 #else
 	.rcomp_value = 0xB000,
 #endif
@@ -2478,6 +2642,9 @@ static struct i2c_board_info i2c_devs9[] __initdata = {
 	{
 		I2C_BOARD_INFO("max17040", (0x6D >> 1)),
 		.platform_data = &max17040_pdata,
+#if defined(CONFIG_GALAXY_I897)
+		.irq = IRQ_EINT(27),
+#endif
 	},
 };
 
@@ -2518,6 +2685,14 @@ static struct i2c_board_info i2c_devs12[] __initdata = {
 		I2C_BOARD_INFO("yas529", 0x2e),
 	},
 };
+
+#if defined(CONFIG_GALAXY_I897)
+static struct i2c_board_info i2c_devs13[] __initdata = {
+	{
+		I2C_BOARD_INFO("A1026_driver", (0x3E)),
+	},
+};
+#endif
 
 static struct resource ram_console_resource[] = {
 	{
@@ -2666,31 +2841,15 @@ static struct sec_jack_zone sec_jack_zones[] = {
 		.check_count = 20,
 		.jack_type = SEC_HEADSET_3POLE,
 	},
-#if defined(CONFIG_GALAXY_I897) //cappy is 700 to 2500
-        {
-                /* 0 < adc <= 700, unstable zone, default to 3pole if it stays
-                 * in this range for 800ms (10ms delays, 80 samples)
-                 */
-                .adc_high = 700,
-                .delay_ms = 10,
-                .check_count = 80,
-                .jack_type = SEC_HEADSET_3POLE,
-        },
-        {
-                /* 700 < adc <= 2500, unstable zone, default to 4pole if it
-                 * stays in this range for 800ms (10ms delays, 80 samples)
-                 */
-                .adc_high = 2500,
-                .delay_ms = 10,
-                .check_count = 80,
-                .jack_type = SEC_HEADSET_4POLE,
-        },
-#else
 	{
 		/* 0 < adc <= 900, unstable zone, default to 3pole if it stays
 		 * in this range for 800ms (10ms delays, 80 samples)
 		 */
+#if defined(CONFIG_GALAXY_I897)
+		.adc_high = 600,
+#else
 		.adc_high = 900,
+#endif
 		.delay_ms = 10,
 		.check_count = 80,
 		.jack_type = SEC_HEADSET_3POLE,
@@ -2699,17 +2858,30 @@ static struct sec_jack_zone sec_jack_zones[] = {
 		/* 900 < adc <= 2000, unstable zone, default to 4pole if it
 		 * stays in this range for 800ms (10ms delays, 80 samples)
 		 */
+#if defined(CONFIG_GALAXY_I897)
+		.adc_high = 700,
+#else
 		.adc_high = 2000,
+#endif
 		.delay_ms = 10,
 		.check_count = 80,
+#if defined(CONFIG_GALAXY_I897)
+.jack_type = SEC_HEADSET_3POLE,
+
+#else
 		.jack_type = SEC_HEADSET_4POLE,
-	},
+
 #endif
+	},
 	{
 		/* 2000 < adc <= 3400, 4 pole zone, default to 4pole if it
 		 * stays in this range for 100ms (10ms delays, 10 samples)
 		 */
+#if defined(CONFIG_GALAXY_I897)
+		.adc_high = 3000,
+#else
 		.adc_high = 3400,
+#endif
 		.delay_ms = 10,
 		.check_count = 10,
 		.jack_type = SEC_HEADSET_4POLE,
@@ -2809,7 +2981,8 @@ struct sec_jack_platform_data sec_jack_pdata = {
 	.num_buttons_zones = ARRAY_SIZE(sec_jack_buttons_zones),
 	.det_gpio = GPIO_DET_35,
 #if defined(CONFIG_GALAXY_I897)
-	.send_end_gpio = GPIO_KBC2,
+	.send_end_gpio_35 = GPIO_EAR_SEND_END35,
+	.det_active_high = 1,
 #else
 	.send_end_gpio = GPIO_EAR_SEND_END,
 #endif
@@ -2822,6 +2995,9 @@ static struct platform_device sec_device_jack = {
 };
 
 #define S5PV210_PS_HOLD_CONTROL_REG (S3C_VA_SYS+0xE81C)
+#if defined (CONFIG_GALAXY_I897)
+extern bool charging_mode_get(void);
+#endif
 static void aries_power_off(void)
 {
 	int err;
@@ -2842,6 +3018,12 @@ static void aries_power_off(void)
 	/* prevent phone reset when AP off */
 	gpio_set_value(GPIO_PHONE_ON, 0);
 
+	#if defined (CONFIG_GALAXY_I897)
+	if(charging_mode_get())
+	{
+		phone_wait_cnt = 11;
+	}
+	#endif
 	/* confirm phone off */
 	while (1) {
 		if (gpio_get_value(GPIO_PHONE_ACTIVE)) {
@@ -3213,13 +3395,20 @@ static struct platform_device *aries_devices[] __initdata = {
 	&s3c_device_i2c5,  /* accel sensor */
 	&s3c_device_i2c6,
 	&s3c_device_i2c7,
-#if !defined(CONFIG_ARIES_NTT)
+#if !defined (CONFIG_GALAXY_I897)
 	&s3c_device_i2c8,  /* FM radio */
+#else
+//&s3c_device_i2c8, 
 #endif
 	&s3c_device_i2c9,  /* max1704x:fuel_guage */
 	&s3c_device_i2c11, /* optical sensor */
 	&s3c_device_i2c12, /* magnetic sensor */
+#if defined (CONFIG_GALAXY_I897)
+	&s3c_device_i2c13, /* A1026 */
+#endif
+#if !defined(CONFIG_GALAXY_I897)
 	&s3c_device_i2c14, /* nfc sensor */
+#endif
 #ifdef CONFIG_USB_GADGET
 	&s3c_device_usbgadget,
 #endif
@@ -3373,6 +3562,16 @@ static void __init fsa9480_gpio_init(void)
 	s3c_gpio_setpull(GPIO_JACK_nINT, S3C_GPIO_PULL_NONE);
 }
 
+#if defined (CONFIG_GALAXY_I897)
+static void __init fuelgauge_gpio_init(void)
+{
+//       s3c_gpio_cfgpin(GPIO_KBR3, S3C_GPIO_SFN(GPIO_KBR3_WAKE_AF));
+//	s3c_gpio_setpull(GPIO_KBR3, S3C_GPIO_PULL_NONE);
+
+	 s3c_gpio_cfgpin(GPIO_KBR3, S5PV210_GPH3_3_EXT_INT33_3);
+	 s3c_gpio_setpull(GPIO_KBR3, S3C_GPIO_PULL_NONE);	
+}
+#endif
 static void __init setup_ram_console_mem(void)
 {
 	ram_console_resource[0].start = ram_console_start;
@@ -3401,7 +3600,7 @@ static void __init sound_init(void)
 #if !defined(CONFIG_ARIES_NTT)
 	gpio_request(GPIO_MICBIAS_EN, "micbias_enable");
 #if defined(CONFIG_GALAXY_I897)
-	gpio_request(GPIO_EAR_MICBIAS_EN, "ear_micbias_enable");
+	gpio_request(GPIO_EARMICBIAS_EN, "ear_micbias_enable");
 #endif
 #else
 	gpio_request(GPIO_MICBIAS_EN, "micbias_enable");
@@ -3486,14 +3685,23 @@ static void __init aries_machine_init(void)
 	/* FM Radio */
 	i2c_register_board_info(8, i2c_devs8, ARRAY_SIZE(i2c_devs8));
 
+#if defined (CONFIG_GALAXY_I897)
+	fuelgauge_gpio_init();
+#endif
 	i2c_register_board_info(9, i2c_devs9, ARRAY_SIZE(i2c_devs9));
 	/* optical sensor */
 	gp2a_gpio_init();
 	i2c_register_board_info(11, i2c_devs11, ARRAY_SIZE(i2c_devs11));
 	/* magnetic sensor */
 	i2c_register_board_info(12, i2c_devs12, ARRAY_SIZE(i2c_devs12));
+#if defined(CONFIG_GALAXY_I897)
+	i2c_register_board_info(13, i2c_devs13, ARRAY_SIZE(i2c_devs13)); /* audience A1026 */
+#endif
+
+#if !defined (CONFIG_GALAXY_I897)
 	/* nfc sensor */
 	i2c_register_board_info(14, i2c_devs14, ARRAY_SIZE(i2c_devs14));
+#endif
 
 #ifdef CONFIG_FB_S3C_TL2796
 	spi_register_board_info(spi_board_info, ARRAY_SIZE(spi_board_info));

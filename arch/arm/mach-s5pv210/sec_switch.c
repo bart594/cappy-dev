@@ -58,7 +58,11 @@ static void usb_switch_mode(struct sec_switch_struct *secsw, int mode)
 		if (secsw->pdata && secsw->pdata->set_vbus_status)
 			secsw->pdata->set_vbus_status((u8)USB_VBUS_CP_ON);
 		mdelay(10);
+	#if defined(CONFIG_GALAXY_I897) 
+		fsa9480_manual_switching(SWITCH_PORT_VAUDIO);
+	#else
 		fsa9480_manual_switching(SWITCH_PORT_AUDIO);
+	#endif
 	}
 }
 

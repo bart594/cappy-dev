@@ -84,6 +84,10 @@ static const char longname[] = "Gadget Android";
 #  define PRODUCT_ID		0x0001
 #endif /* CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE */
 
+#ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
+u16 askonstatus=0;
+u16 inaskonstatus=0;
+#endif
 
 struct android_dev {
 	struct usb_composite_dev *cdev;
@@ -660,13 +664,21 @@ void android_enable_function(struct usb_function *f, int enable)
  * Written by SoonYong,Cho  (Fri 5, Nov 2010)
  */
 #ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
+extern void fsa9480_usb_cb(bool attached);
 static void samsung_enable_function(int mode)
 {
 	struct android_dev *dev = _android_dev;
 	int product_id = 0;
 	int ret = -1;
 	CSY_DBG_ESS("enable mode=0x%x\n", mode);
-
+    CSY_DBG_ESS("enable askonstatus=0x%x\n", askonstatus);
+	if(askonstatus == 0xabcd){
+		if(mode == USBSTATUS_ASKON)
+			return;
+		inaskonstatus=1;
+		askonstatus=0;			
+		fsa9480_usb_cb(1);			
+		}
 	switch(mode) {
 		case USBSTATUS_UMS:
 			CSY_DBG_ESS("mode = USBSTATUS_UMS (0x%x)\n", mode);
@@ -692,6 +704,7 @@ static void samsung_enable_function(int mode)
 #endif			
 		case USBSTATUS_ASKON: /* do not save usb mode */
 			CSY_DBG_ESS("mode = USBSTATUS_ASKON (0x%x) Don't change usb mode\n", mode);
+			askonstatus=0xabcd;
 			return;
 	}
 
@@ -775,7 +788,14 @@ static ssize_t UsbMenuSel_switch_show(struct device *dev, struct device_attribut
 {
 	struct android_dev *a_dev = _android_dev;
 	int value = -1;
+  CSY_DBG("product askonstatus = %x\n", askonstatus);
 
+	 if(askonstatus !=0)
+	 {
+	 		 CSY_DBG("[UsbMenuSel] ASK = %x\n", askonstatus);
+			return sprintf(buf, "[UsbMenuSel] ASK\n");
+
+	 }
 	if(a_dev->cdev) {
 		CSY_DBG("product num = %d\n", a_dev->cdev->product_num);
 		switch(a_dev->requested_usb_mode) {
@@ -835,7 +855,24 @@ static ssize_t UsbMenuSel_switch_store(struct device *dev, struct device_attribu
 
 /* soonyong.cho : attribute of sysfs for usb menu switch */
 static DEVICE_ATTR(UsbMenuSel, S_IRGRP |S_IWGRP | S_IRUSR | S_IWUSR, UsbMenuSel_switch_show, UsbMenuSel_switch_store);
+static ssize_t AskOnStatus_switch_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	if(inaskonstatus){
+		inaskonstatus=0;
+		return sprintf(buf, "%s\n", "Blocking");
+		}
+	else{
+		return sprintf(buf, "%s\n", "NonBlocking");
+		}
+}
 
+
+static ssize_t AskOnStatus_switch_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
+{		
+	return size;
+}
+
+static DEVICE_ATTR(AskOnStatus, S_IRUGO |S_IWUGO | S_IRUSR | S_IWUSR, AskOnStatus_switch_show, AskOnStatus_switch_store);
 #endif /* CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE */
 
 
@@ -905,6 +942,8 @@ static int android_probe(struct platform_device *pdev)
  *		  If you want initialize, please implement it.
  */
 
+if (device_create_file(&pdev->dev, &dev_attr_AskOnStatus) < 0)
+		pr_err("Failed to create device file(%s)!\n", dev_attr_AskOnStatus.attr.name);	
 #endif
 	return usb_composite_register(&android_usb_driver);
 }

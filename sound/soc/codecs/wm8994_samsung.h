@@ -80,6 +80,14 @@ Codec Output Path BIT
 #define VOICECALL_HP		(0x01 << 3)
 #define VOICECALL_HP_NO_MIC	(0x01 << 4)
 #define VOICECALL_BT		(0x01 << 5)
+#if defined(CONFIG_GALAXY_I897)
+#define VOICECALL_FAC_SUB_MIC   (0x01 << 6)
+#define VOICECALL_TTY		(0x01 << 7)
+#define VOICECALL_HAC		(0x01 << 8)
+#define VOICECALL_LOOPBACK	(0x01 << 9)
+#define VOICECALL_LOOPBACK_SPK	(0x01 << 10)
+#define VOICECALL_LOOPBACK_HP	(0x01 << 11)
+#endif
 #define VOICECALL_EXTRA_DOCK    (0x01 << 6)
 
 #define RECORDING_MAIN		(0x01 << 1)
@@ -94,6 +102,7 @@ Codec Output Path BIT
 #define RECORDING_VOIP_MAIN	(0x01 << 10)
 #define RECORDING_VOIP_HP	(0x01 << 11)
 #define RECORDING_VOIP_BT	(0x01 << 12)
+#define RECORDING_QIK		(0x01 << 13)
 
 #define FMRADIO_HP		(0x01 << 1)
 #define FMRADIO_SPK		(0x01 << 2)
@@ -114,6 +123,31 @@ Codec Output Path BIT
 #define CMD_CALL_FLAG_CLEAR		4 /* Call flag clear for shutdown */
 #define CMD_CALL_END			5 /* Codec off in call mode */
 
+#ifdef CONFIG_GALAXY_I897
+#define GANLITE_ON        9
+#define GANLITE_OFF       10
+#define CMD_TTY_OFF     11
+#define CMD_TTY_ON      12
+#define CMD_VOIP_QIK_OFF 13
+#define CMD_VOIP_QIK_ON 14
+#define CMD_HAC_OFF     15
+#define CMD_HAC_ON      16
+//[mook_GB : add in audience
+#define CMD_AUDIENCE_OFF    17
+#define CMD_AUDIENCE_ON    18
+#define CMD_FACTORY_SUB_MIC_OFF	19
+#define CMD_FACTORY_SUB_MIC_ON	20
+
+enum AUDIENCE_State {AUDIENCE_OFF, AUDIENCE_ON};
+enum FactorySubMIC_State {FAC_SUB_MIC_OFF, FAC_SUB_MIC_ON};
+enum TTY_State {TTY_OFF, TTY_ON};
+enum HAC_State {HAC_OFF, HAC_ON};
+enum QIK_state	{QIK_OFF, QIK_ON};
+enum state{OFF1, ON1};
+enum ganlite {wificall_off, wificall_on};
+
+//]mook_GB : add in audience
+#endif
 /*
  * Definitions of enum type
  */
@@ -122,12 +156,16 @@ enum audio_path	{
 	EXTRA_DOCK_SPEAKER
 };
 enum mic_path			{MAIN, SUB, BT_REC, MIC_OFF};
+#ifdef CONFIG_GALAXY_I897
+enum factory_test		{SEC_NORMAL, SEC_TEST_HWCODEC , SEC_TEST_15MODE, SEC_TEST_PBA_LOOPBACK};
+#endif
 enum fmradio_path		{FMR_OFF, FMR_SPK, FMR_HP, FMR_DUAL_MIX};
 enum fmradio_mix_path		{FMR_MIX_OFF, FMR_MIX_DUAL};
 enum power_state		{CODEC_OFF, CODEC_ON };
 enum input_source_state		{DEFAULT_INPUT, RECOGNITION, CAMCORDER, VOIP_INPUT};
 enum output_source_state	{DEFAULT_OUTPUT, RING_TONE, VOIP_OUTPUT};
 enum vtcall_state		{VT_OFF, VT_ON};
+enum recognition		{REC_OFF, REC_ON};
 
 typedef void (*select_route)(struct snd_soc_codec *);
 typedef void (*select_mic_route)(struct snd_soc_codec *);
@@ -165,6 +203,11 @@ struct wm8994_priv {
 	enum power_state power_state;
 	enum input_source_state input_source;
 	enum output_source_state output_source;
+#ifdef CONFIG_GALAXY_I897
+	enum state ganlite_active;
+	enum QIK_state QIK_state;
+#endif
+	enum recognition recognition_active;		// for control gain to voice recognition.
 	select_route *universal_playback_path;
 	select_route *universal_voicecall_path;
 	select_mic_route *universal_mic_path;
@@ -174,6 +217,13 @@ struct wm8994_priv {
 	int testmode_config_flag;
 	u16 dc_servo[DCS_NUM];
 	bool output_source_flag;
+#ifdef CONFIG_GALAXY_I897
+	unsigned int AUDIENCE_state;
+	unsigned int Fac_SUB_MIC_state;
+	unsigned int TTY_state;
+	unsigned int HAC_state;
+	unsigned int cur_audience;
+#endif
 };
 
 struct gain_info_t {
@@ -216,6 +266,11 @@ void wm8994_set_playback_extra_dock_speaker(struct snd_soc_codec *codec);
 void wm8994_set_voicecall_common(struct snd_soc_codec *codec);
 void wm8994_set_voicecall_receiver(struct snd_soc_codec *codec);
 void wm8994_set_voicecall_headset(struct snd_soc_codec *codec);
+#ifdef CONFIG_GALAXY_I897
+void wm8994_set_voicecall_tty(struct snd_soc_codec *codec);
+void wm8994_set_voicecall_receiver_audience(struct snd_soc_codec *codec); //hdlnc_ldj_0417_A1026
+void wm8994_set_voicecall_factory_subMIC(struct snd_soc_codec *codec); //hdlnc_ldj_0417_A1026
+#endif
 void wm8994_set_voicecall_headphone(struct snd_soc_codec *codec);
 void wm8994_set_voicecall_speaker(struct snd_soc_codec *codec);
 void wm8994_set_voicecall_bluetooth(struct snd_soc_codec *codec);

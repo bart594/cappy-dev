@@ -341,7 +341,11 @@
  
 #define GPIO_GPS_PWR_EN			S5PV210_GPG3(1)
  
+#if defined(CONFIG_GALAXY_I897)
+#define GPIO_GPS_CLK_INT		S5PV210_GPG3(2)
+#else
 #define GPIO_GPG32			S5PV210_GPG3(2)
+#endif
 #endif
  
 #define GPIO_TA_CURRENT_SEL_AP		S5PV210_GPG3(3)
@@ -402,6 +406,12 @@
 
 #define GPIO_KBC2			S5PV210_GPH2(2)
 #define GPIO_KBC2_AF			3
+// [[ HDLNC_BP_pyoungkuenoh_20110223
+#if	defined(CONFIG_GALAXY_I897)
+#define GPIO_EAR_SEND_END35		S5PV210_GPH3(6)
+#define GPIO_EAR_SEND_END35_AF	0xFF
+#endif
+// ]] HDLNC_BP_pyoungkuenoh_20110223
 
 #if defined(CONFIG_ARIES_NTT)
 #define GPIO_PHONE_ACTIVE		S5PV210_GPH2(3)
@@ -432,6 +442,10 @@
 
 #define GPIO_KBR3			S5PV210_GPH3(3)
 #define GPIO_KBR3_AF			3
+#if defined (CONFIG_GALAXY_I897) 
+//#define GPIO_KBR3_WAKE_AF		0xF
+#define S5PV210_GPH3_3_EXT_INT33_3	(0xf << 12)
+#endif
 
 #define GPIO_T_FLASH_DETECT		S5PV210_GPH3(4)
 
@@ -441,7 +455,13 @@
 #define GPIO_MSENSE_IRQ			S5PV210_GPH3(5)
 #endif
 
+// [[ HDLNC_BP_pyoungkuenoh_20110224
+#if defined(CONFIG_GALAXY_I897)
+#define GPIO_EAR_SEND_END		S5PV210_GPH2(2)
+#else
 #define GPIO_EAR_SEND_END		S5PV210_GPH3(6)
+#endif
+
 #define GPIO_EAR_SEND_END_AF		0xFF
 
 #define GPIO_CP_RST			S5PV210_GPH3(7)
@@ -547,7 +567,8 @@
 #define GPIO_AP_PMIC_SCL		S5PV210_GPJ4(3)
 
 #if defined(CONFIG_GALAXY_I897)
-#define GPIO_EAR_MICBIAS_EN		S5PV210_GPJ4(4)
+#define GPIO_EARMICBIAS_EN			S5PV210_GPJ4(4)
+#define GPIO_MICBIAS_EN2			S5PV210_GPJ2(5)
 #endif
 
 #define GPIO_MP010			S5PV210_MP01(0)
@@ -602,6 +623,13 @@
 #define GPIO_DISPLAY_SI			S5PV210_MP04(3)
 #define GPIO_DISPLAY_SI_AF		S3C_GPIO_SFN(1)
 
+#if defined(CONFIG_GALAXY_I897)
+#define GPIO_A1026_SDA			S5PV210_MP04(5)
+#define GPIO_A1026_SDA_AF		2
+
+#define GPIO_A1026_SCL			S5PV210_MP04(4)
+#define GPIO_A1026_SCL_AF		2
+#endif
 #define GPIO_MP044			S5PV210_MP04(4)
 
 #define GPIO_LVDS_RST			S5PV210_MP04(5)
