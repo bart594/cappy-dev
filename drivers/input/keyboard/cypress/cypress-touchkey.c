@@ -260,16 +260,6 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 
 	devdata->pdata->touchkey_onoff(TOUCHKEY_ON);
 
-#if 0
-	if (i2c_touchkey_write_byte(devdata, devdata->backlight_on)) {
-		devdata->is_dead = true;
-		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
-		dev_err(&devdata->client->dev, "%s: touch keypad not responding"
-				" to commands, disabling\n", __func__);
-		return;
-	}
-
-#endif
 	devdata->is_dead = false;
 	enable_irq(devdata->client->irq);
 	devdata->is_powering_on = false;

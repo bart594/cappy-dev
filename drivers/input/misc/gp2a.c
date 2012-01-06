@@ -53,7 +53,8 @@
 #define gp2a_dbgmsg(str, args...) pr_debug("%s: " str, __func__, ##args)
 
 
-#define LIGHT_BUFFER_NUM	10
+#define ADC_BUFFER_NUM	6
+#define LIGHT_BUFFER_NUM	20
 
 /* ADDSEL is LOW */
 #define REGS_PROX		0x0 /* Read  Only */
@@ -85,12 +86,12 @@ enum {
 static const int adc_table[9] = {
 	250,
 	400,
-	600,
+	480,
 	800,
-	1200,
-	1800,
-	1900,
-	2100,
+	1000,
+	1400,
+	1550,
+	2000,
 };
 
 /* driver data */
@@ -105,6 +106,7 @@ struct gp2a_data {
 	struct work_struct work_light;
 	struct hrtimer timer;
 	ktime_t light_poll_delay;
+	int adc_value_buf[ADC_BUFFER_NUM];
 	int adc_index_count;
 	int light_buffer;
 	int light_count;
@@ -319,8 +321,46 @@ static struct attribute_group proximity_attribute_group = {
 
 static int lightsensor_get_adcvalue(struct gp2a_data *gp2a)
 {
+	int i = 0;
+	int j = 0;
+	unsigned int adc_total = 0;
+	int adc_avr_value;
+	unsigned int adc_index = 0;
+	unsigned int adc_max = 0;
+	unsigned int adc_min = 0;
+	int value = 0;
+
 	/* get ADC */
-	return gp2a->pdata->light_adc_value();
+	value = gp2a->pdata->light_adc_value();
+
+	adc_index = (gp2a->adc_index_count++) % ADC_BUFFER_NUM;
+
+	/*ADC buffer initialize (light sensor off ---> light sensor on) */
+	if (!gp2a->adc_buf_initialized) {
+		gp2a->adc_buf_initialized = true;
+		for (j = 0; j < ADC_BUFFER_NUM; j++)
+			gp2a->adc_value_buf[j] = value;
+	} else
+		gp2a->adc_value_buf[adc_index] = value;
+
+	adc_max = gp2a->adc_value_buf[0];
+	adc_min = gp2a->adc_value_buf[0];
+
+	for (i = 0; i < ADC_BUFFER_NUM; i++) {
+		adc_total += gp2a->adc_value_buf[i];
+
+		if (adc_max < gp2a->adc_value_buf[i])
+			adc_max = gp2a->adc_value_buf[i];
+
+		if (adc_min > gp2a->adc_value_buf[i])
+			adc_min = gp2a->adc_value_buf[i];
+	}
+	adc_avr_value = (adc_total-(adc_max+adc_min))/(ADC_BUFFER_NUM-2);
+
+	if (gp2a->adc_index_count == ADC_BUFFER_NUM-1)
+		gp2a->adc_index_count = 0;
+
+	return adc_avr_value;
 }
 
 int ls_get_adcvalue(void)
