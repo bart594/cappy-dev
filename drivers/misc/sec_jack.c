@@ -368,7 +368,7 @@ void sec_jack_buttons_work(struct work_struct *work)
 
 	pr_warn("%s: key is skipped. ADC value is %d\n", __func__, adc);
 }
-//TV_OUT touch_fix
+#if defined(CONFIG_GALAXY_I897) 
 // HDLNC_OPK_20110307
 static int jack_detect_change(struct work_struct *ignored)
 {
@@ -392,6 +392,7 @@ static int jack_detect_change(struct work_struct *ignored)
 }
 static DECLARE_WORK(jack_detect_work,jack_detect_change);
 // HDLNC_OPK_20110307
+#endif
 static ssize_t select_jack_show(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
@@ -545,14 +546,13 @@ static int sec_jack_probe(struct platform_device *pdev)
 
 #if defined(CONFIG_GALAXY_I897)
         pdata->det_active_high = 1;
-#endif
-
 //TV_OUT touch_fix
 // HDLNC_OPK_20110307
 // Fix when boot on earjack plugged state does not recognize the problem
 	local_hi = hi;	
 	schedule_work(&jack_detect_work);
 // HDLNC_OPK_20110307
+#endif
 	return 0;
 
 err_enable_irq_wake:

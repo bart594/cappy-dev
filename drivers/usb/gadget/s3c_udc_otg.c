@@ -103,7 +103,8 @@ static char *state_names[] = {
 
 #define	DRIVER_DESC		"S3C HS USB Device Controller Driver, (c) 2008-2009 Samsung Electronics"
 #define	DRIVER_VERSION		"15 March 2009"
-
+extern void s5pv210_lock_dvfs_high_level(uint , uint);
+extern void s5pv210_unlock_dvfs_high_level(unsigned int);
 struct s3c_udc	*the_controller;
 
 static struct clk	*otg_clock;
@@ -148,6 +149,7 @@ static void set_max_pktsize(struct s3c_udc *dev, enum usb_device_speed speed);
 static void nuke(struct s3c_ep *ep, int status);
 static int s3c_udc_set_halt(struct usb_ep *_ep, int value);
 
+struct usb_gadget *usb_gadget_p;
 static struct usb_ep_ops s3c_ep_ops = {
 	.enable = s3c_ep_enable,
 	.disable = s3c_ep_disable,
@@ -434,18 +436,29 @@ int s3c_vbus_enable(struct usb_gadget *gadget, int enable)
 	unsigned long flags;
 	struct s3c_udc *dev = the_controller;
 
+#ifdef CONFIG_GALAXY_I897
  // USB Gadget entry point
  if (enable) {
   dev_info(&gadget->dev, "USB udc %d,%d lock\n", dev->udc_enabled, enable);
   //wake_lock(&dev->udc_wake_lock);
-
-  s5pv210_lock_dvfs_high_level(DVFS_LOCK_TOKEN_8, L4); //100Mhz lock
-
+  //s5pv210_lock_dvfs_high_level(DVFS_LOCK_TOKEN_8, L1); //200Mhz lock
+  	s5pv210_lock_dvfs_high_level(DVFS_LOCK_TOKEN_8,L1); //800MHz lock
  } else {
   dev_info(&gadget->dev, "USB udc %d,%d unlock\n", dev->udc_enabled, enable);
   //wake_unlock(&dev->udc_wake_lock);
   s5pv210_unlock_dvfs_high_level(DVFS_LOCK_TOKEN_8);
  }
+#else
+ if (enable) {
+  dev_info(&gadget->dev, "USB udc %d,%d lock\n", dev->udc_enabled, enable);
+  //wake_lock(&dev->udc_wake_lock);
+  s5pv210_lock_dvfs_high_level(DVFS_LOCK_TOKEN_8, L3); //200Mhz lock
+ } else {
+  dev_info(&gadget->dev, "USB udc %d,%d unlock\n", dev->udc_enabled, enable);
+  //wake_unlock(&dev->udc_wake_lock);
+  s5pv210_unlock_dvfs_high_level(DVFS_LOCK_TOKEN_8);
+ }
+#endif
 
 	if (dev->udc_enabled != enable) {
 		dev->udc_enabled = enable;
@@ -1232,6 +1245,7 @@ static int s3c_udc_probe(struct platform_device *pdev)
 	}
 
 	the_controller = dev;
+	usb_gadget_p = &dev->gadget;
 	platform_set_drvdata(pdev, dev);
 
 	dev_set_name(&dev->gadget.dev, "gadget");

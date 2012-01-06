@@ -3170,7 +3170,7 @@ static void qt602240_late_resume(struct early_suspend *h)
     gpio_set_value(GPIO_TOUCH_EN, 1);
     msleep(70);
     s3c_gpio_cfgpin(GPIO_TOUCH_INT, S3C_GPIO_SFN(0xf));
-    s3c_gpio_setpull(GPIO_TOUCH_INT, S3C_GPIO_PULL_UP);
+    s3c_gpio_setpull(GPIO_TOUCH_INT, S3C_GPIO_PULL_NONE);
 
     if ( (ret = write_power_config(power_config)) != CFG_WRITE_OK) {
         /* "Power config write failed!\n" */
