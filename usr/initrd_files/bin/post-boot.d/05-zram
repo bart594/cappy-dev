@@ -2,11 +2,16 @@
 
 source /etc/ram.conf
 ZRAMSIZE=$(($ZRAM_SIZE*1024*1024))
-FUDGESWAP=$(($ZRAM_SIZE*1024 / 6))
+FUDGESWAP=$(($ZRAM_SIZE*1024 / 12))
 
 if test -e /lib/modules/lzo_compress.ko; then
    /bin/insmod /lib/modules/lzo_compress.ko
    /bin/insmod /lib/modules/lzo_decompress.ko
+fi
+
+if test -e /lib/modules/csnappy_compress.ko; then
+   /bin/insmod /lib/modules/csnappy_compress.ko
+   /bin/insmod /lib/modules/csnappy_decompress.ko
 fi
 
 /bin/insmod /lib/modules/zram.ko 
