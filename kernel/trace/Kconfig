@@ -16,7 +16,8 @@ config HAVE_FTRACE_NMI_ENTER
 
 config HAVE_FUNCTION_TRACER
 	bool
-	help
+        default n
+        help
 	  See Documentation/trace/ftrace-design.txt
 
 config HAVE_FUNCTION_GRAPH_TRACER
@@ -121,11 +122,12 @@ if FTRACE
 config FUNCTION_TRACER
 	bool "Kernel Function Tracer"
 	depends on HAVE_FUNCTION_TRACER
-	select FRAME_POINTER
+	#select FRAME_POINTER
 	select KALLSYMS
 	select GENERIC_TRACER
 	select CONTEXT_SWITCH_TRACER
-	help
+        default n
+        help
 	  Enable the kernel to trace every kernel function. This is done
 	  by using a compiler feature to insert a small, 5-byte No-Operation
 	  instruction at the beginning of every kernel function, which NOP
