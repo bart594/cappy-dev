@@ -54,11 +54,11 @@
 #include <linux/wlan_plat.h>
 #include <linux/mfd/wm8994/wm8994_pdata.h>
 
-#ifdef CONFIG_ANDROID_PMEM
-#include <linux/android_pmem.h>
+//#ifdef CONFIG_ANDROID_PMEM
+//#include <linux/android_pmem.h>
 #include <plat/media.h>
 #include <mach/media.h>
-#endif
+//#endif
 
 #ifdef CONFIG_S5PV210_POWER_DOMAIN
 #include <mach/power-domain.h>
@@ -316,10 +316,12 @@ static struct s3cfb_lcd s6e63m0 = {
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC0 (5000 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC1 (5000 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC2 (5000 * SZ_1K)
+#define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_JPEG (1024 * SZ_1K)
 #else
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC0 (11264 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC1 (5000 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMC2 (11264 * SZ_1K)
+#define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_JPEG (5000 * SZ_1K)
 #endif
 #if !defined(CONFIG_ARIES_NTT)   
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_MFC0 (32768 * SZ_1K)
@@ -329,7 +331,6 @@ static struct s3cfb_lcd s6e63m0 = {
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_MFC1 (36864 * SZ_1K)
 #endif
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_FIMD (3000 * SZ_1K)
-#define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_JPEG (1024 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_PMEM (2048 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_GPU1 (3300 * SZ_1K)
 #define  S5PV210_VIDEO_SAMSUNG_MEMSIZE_ADSP (1500 * SZ_1K)
@@ -2707,6 +2708,7 @@ static struct platform_device ram_console_device = {
 	.resource = ram_console_resource,
 };
 
+/*
 #ifdef CONFIG_ANDROID_PMEM
 static struct android_pmem_platform_data pmem_pdata = {
 	.name = "pmem",
@@ -2768,6 +2770,7 @@ static void __init android_pmem_set_platdata(void)
 		(u32)s5p_get_media_memsize_bank(S5P_MDEV_PMEM_ADSP, 0);
 }
 #endif
+*/
 
 struct platform_device sec_device_battery = {
 	.name	= "sec-battery",
@@ -3450,12 +3453,13 @@ static struct platform_device *aries_devices[] __initdata = {
 	&s5pv210_pd_g3d,
 	&s5pv210_pd_mfc,
 #endif
-
+/*
 #ifdef CONFIG_ANDROID_PMEM
 	&pmem_device,
 	&pmem_gpu1_device,
 	&pmem_adsp_device,
 #endif
+*/
 
 #ifdef CONFIG_HAVE_PWM
 	&s3c_device_timer[0],
@@ -3646,11 +3650,11 @@ static void __init aries_machine_init(void)
 #endif
 	/*initialise the gpio's*/
 	config_init_gpio();
-
+/*
 #ifdef CONFIG_ANDROID_PMEM
 	android_pmem_set_platdata();
 #endif
-
+*/
 	/* i2c */
 	s3c_i2c0_set_platdata(NULL);
 #ifdef CONFIG_S3C_DEV_I2C1
