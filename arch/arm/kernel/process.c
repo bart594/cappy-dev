@@ -517,8 +517,8 @@ pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
 EXPORT_SYMBOL(kernel_thread);
 
 unsigned long get_wchan(struct task_struct *p)
-#if 0
 {
+#if 0
 	struct stackframe frame;
 	int count = 0;
 	if (!p || p == current || p->state == TASK_RUNNING)
