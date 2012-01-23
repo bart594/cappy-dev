@@ -240,7 +240,7 @@ static void cypress_touchkey_early_suspend(struct early_suspend *h)
 		return;
 
 	disable_irq(devdata->client->irq);
-	
+
 #ifdef CONFIG_KEYPAD_CYPRESS_TOUCH_BLN
 	/*
 	 * Disallow powering off the touchkey controller
@@ -259,6 +259,14 @@ static void cypress_touchkey_early_resume(struct early_suspend *h)
 		container_of(h, struct cypress_touchkey_devdata, early_suspend);
 
 	devdata->pdata->touchkey_onoff(TOUCHKEY_ON);
+
+	if (i2c_touchkey_write_byte(devdata, devdata->backlight_on)) {
+		devdata->is_dead = true;
+		devdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+		dev_err(&devdata->client->dev, "%s: touch keypad not responding"
+				" to commands, disabling\n", __func__);
+		return;
+	}
 
 	devdata->is_dead = false;
 	enable_irq(devdata->client->irq);
@@ -285,12 +293,12 @@ static void init_hw(void)
 	s3c_gpio_cfgpin(_3_GPIO_TOUCH_INT, _3_GPIO_TOUCH_INT_AF);
 }
 
-static int touchkey_update_open(struct inode *inode, struct file *filp)
+int touchkey_update_open(struct inode *inode, struct file *filp)
 {
 	return 0;
 }
 
-static ssize_t touchkey_update_read(struct file * filp, char *buf, size_t count,
+ssize_t touchkey_update_read(struct file * filp, char *buf, size_t count,
 			     loff_t * f_pos)
 {
 	char data[3] = { 0, };
@@ -332,12 +340,12 @@ ssize_t touchkey_update_write(struct file *filp, const char *buf, size_t count,
 }
 #endif
 
-static int touchkey_update_release(struct inode *inode, struct file *filp)
+int touchkey_update_release(struct inode *inode, struct file *filp)
 {
 	return 0;
 }
 
-static const struct file_operations touchkey_update_fops = {
+struct file_operations touchkey_update_fops = {
 	.owner = THIS_MODULE,
 	.read = touchkey_update_read,
 	//.write   = touchkey_update_write,
@@ -352,7 +360,7 @@ static struct miscdevice touchkey_update_device = {
 	.fops = &touchkey_update_fops,
 };
 
-static int i2c_touchkey_read(struct cypress_touchkey_devdata *devdata, 
+static int i2c_touchkey_read(struct cypress_touchkey_devdata *devdata,
 					u8 reg, u8 * val, unsigned int len)
 {
 	int err;
@@ -402,7 +410,7 @@ static ssize_t touch_version_write(struct device *dev,
 	return size;
 }
 
-static void touchkey_update_func(struct work_struct *p)
+void touchkey_update_func(struct work_struct *p)
 {
 	int retry = 10;
 	touchkey_update_status = 1;
@@ -452,7 +460,7 @@ static ssize_t touch_update_read(struct device *dev,
 	return count;
 }
 
-static int i2c_touchkey_write(struct cypress_touchkey_devdata *devdata, 
+static int i2c_touchkey_write(struct cypress_touchkey_devdata *devdata,
 						u8 * val, unsigned int len)
 {
 	int err;
@@ -476,25 +484,19 @@ static int i2c_touchkey_write(struct cypress_touchkey_devdata *devdata,
 	return err;
 }
 
-
+struct cypress_touchkey_devdata *tempdata;
 static ssize_t touch_led_control(struct device *dev,
 				 struct device_attribute *attr, const char *buf,
 				 size_t size)
 {
-
-
-	struct cypress_touchkey_devdata *devdata = dev_get_drvdata(dev);
-	int ret;
-
-	if (devdata && !devdata->is_powering_on) {
-		if (strncmp(buf, "1", 1) == 0)
-			ret = i2c_touchkey_write(devdata, &devdata->backlight_on, 1);
-		else
-			ret = i2c_touchkey_write(devdata, &devdata->backlight_off, 1);
-
-		if (ret)
-			dev_err(dev, "%s: touchkey led i2c failed\n", __func__);
-	}
+  u8 data = 0x10;
+  if (sscanf(buf, "%d\n", &data) == 1) {
+    if (!tempdata->is_powering_on) {
+      //printk(KERN_DEBUG "touch_led_control: %d \n", data);
+      i2c_touchkey_write(tempdata, &data, sizeof(u8));
+    }
+  } else
+    printk("touch_led_control Error\n");
 	return size;
 }
 
@@ -548,7 +550,7 @@ static void enable_led_notification(void){
 	if (bln_enabled){
 		/* is_powering_on signals whether touchkey lights are used for touchmode */
 		pr_info("%s: bln interface enabled\n", __FUNCTION__); //remove me
-		
+
 		if (bln_devdata->is_powering_on){
 		pr_info("%s: not in touchmode\n", __FUNCTION__); //remove me
 			/* signal ongoing led notification */
@@ -733,7 +735,9 @@ static int cypress_touchkey_probe(struct i2c_client *client,
 	i2c_set_clientdata(client, devdata);
 
 	devdata->pdata = client->dev.platform_data;
-
+#if defined(TOUCH_UPDATE)
+  tempdata = devdata;
+#endif
 	if (!devdata->pdata->keycode) {
 		dev_err(dev, "%s: Invalid platform data\n", __func__);
 		err = -EINVAL;
@@ -780,14 +784,14 @@ static int cypress_touchkey_probe(struct i2c_client *client,
 	devdata->backlight_off = BACKLIGHT_OFF;
 
 	devdata->has_legacy_keycode = 1;
-#if 0 
+
 	err = i2c_touchkey_write_byte(devdata, devdata->backlight_on);
 	if (err) {
 		dev_err(dev, "%s: touch keypad backlight on failed\n",
 				__func__);
 		goto err_backlight_on;
 	}
-#endif
+
 	if (request_threaded_irq(client->irq, touchkey_interrupt_handler,
 				touchkey_interrupt_thread, IRQF_TRIGGER_FALLING,
 				DEVICE_NAME, devdata)) {
@@ -806,10 +810,8 @@ static int cypress_touchkey_probe(struct i2c_client *client,
 	ret = misc_register(&touchkey_update_device);
 	if (ret) {
 		printk("%s misc_register fail\n", __FUNCTION__);
-	goto err_misc_reg;
 	}
 
-dev_set_drvdata(touchkey_update_device.this_device, devdata);
 	if (device_create_file
 	    (touchkey_update_device.this_device, &dev_attr_touch_version) < 0) {
 		printk("%s device_create_file fail dev_attr_touch_version\n",
@@ -845,7 +847,7 @@ dev_set_drvdata(touchkey_update_device.this_device, devdata);
 
 	touchkey_wq = create_singlethread_workqueue(DEVICE_NAME);
 	if (!touchkey_wq)
-		goto err_create_wq;
+		return -ENOMEM;
 
 	while (retry--) {
 		if (get_touchkey_firmware(data) == 0)	//melfas need delay for multiple read
@@ -878,11 +880,6 @@ dev_set_drvdata(touchkey_update_device.this_device, devdata);
 
 	return 0;
 
-err_create_wq:
-#if defined(TOUCH_UPDATE)
-	misc_deregister(&touchkey_update_device);
-#endif
-err_misc_reg:
 err_req_irq:
 err_backlight_on:
 err_read:
@@ -900,7 +897,7 @@ err_null_keycodes:
 static int __devexit i2c_touchkey_remove(struct i2c_client *client)
 {
 	struct cypress_touchkey_devdata *devdata = i2c_get_clientdata(client);
-	
+
 #ifdef CONFIG_KEYPAD_CYPRESS_TOUCH_BLN
 	misc_deregister(&backlightnotification_device);
 #endif
@@ -970,6 +967,9 @@ static int __init touchkey_init(void)
 
 static void __exit touchkey_exit(void)
 {
+#if defined(TOUCH_UPDATE)
+  misc_deregister(&touchkey_update_device);
+#endif
 	i2c_del_driver(&touchkey_i2c_driver);
 }
 
@@ -979,3 +979,4 @@ module_exit(touchkey_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("@@@");
 MODULE_DESCRIPTION("cypress touch keypad");
+
