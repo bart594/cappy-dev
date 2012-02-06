@@ -139,38 +139,41 @@ static void max17040_get_soc(struct i2c_client *client)
 	struct max17040_chip *chip = i2c_get_clientdata(client);
 	u8 msb;
 	u8 lsb;
-	u32 soc = 0;
-	u32 temp = 0;
-	u32 temp_soc = 0;
+	int  pure_soc, adj_soc, soc;
 
 	msb = max17040_read_reg(client, MAX17040_SOC_MSB);
 	lsb = max17040_read_reg(client, MAX17040_SOC_LSB);
 
-	temp = msb * 100 + ((lsb * 100) / 256);
 
-	if (temp >= 100)
-		temp_soc = temp;
-	else {
-		if (temp >= 70)
-			temp_soc = 100;
-		else
-			temp_soc = 0;
-	}
+	pure_soc = msb * 100 +  ((lsb*100)/256);
 
-	/* rounding off and Changing to percentage */
-	soc = temp_soc / 100;
-
-	if (temp_soc % 100 >= 50)
-		soc += 1;
-
-	if (soc >= 26)
-		soc += 4;
-	else
-		soc = (30 * temp_soc) / 26 / 100;
-
-	if (soc >= 100)
-		soc = 100;
-
+	 if(pure_soc >= 0){
+		 adj_soc = ((pure_soc - 130)*10000)/9720; // (FGPureSOC-EMPTY(1.2))/(FULL-EMPTY(?))*100
+	 }
+	 else{
+		 adj_soc = ((pure_soc - 130)*10000)/9430; // (FGPureSOC-EMPTY(1.2))/(FULL-EMPTY(?))*100
+	 }
+       soc=adj_soc/100;
+	   
+	if( (soc==4) && adj_soc%100 >= 80){
+		soc+=1;
+	 	} 
+	
+	 if( (soc== 0) && (adj_soc>0) ){
+	       soc = 1;  
+	 	}
+	 
+	 if(adj_soc <= 0){
+	       soc = 0;  	 	
+	 	}
+	 
+	 if(soc>=100)
+	 {
+		  soc=100;
+	 }
+	 
+//  printk("[ max17043]  max17040_get_soc, pure_soc= %d, adj_soc= %d, soc=%d \n", pure_soc, adj_soc, soc);
+ 
 	chip->soc = soc;
 }
 static void max17040_get_version(struct i2c_client *client)

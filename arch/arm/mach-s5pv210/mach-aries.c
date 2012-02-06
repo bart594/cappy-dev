@@ -421,6 +421,11 @@ static struct regulator_consumer_supply ldo3_consumer[] = {
 	REGULATOR_SUPPLY("usb_io", NULL),
 };
 
+#if  defined(CONFIG_GALAXY_I897) 
+static struct regulator_consumer_supply ldo4_consumer[] = {
+	REGULATOR_SUPPLY("vadcldo4", NULL),
+};
+#endif
 static struct regulator_consumer_supply ldo5_consumer[] = {
 	REGULATOR_SUPPLY("vtf", NULL),
 };
@@ -512,7 +517,8 @@ static struct regulator_init_data aries_ldo4_data = {
 		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
 		.state_mem	= {
 			.disabled = 1,
-		},
+			.enabled = 0,		
+},
 	},
 };
 
@@ -572,6 +578,22 @@ static struct regulator_init_data aries_ldo9_data = {
 	},
 };
 
+#if defined (CONFIG_GALAXY_I897)
+static struct regulator_init_data aries_ldo11_data = {
+	.constraints	= {
+		.name		= "CAM_AF_3.0V",
+		.min_uV		= 2800000,
+		.max_uV		= 2800000,
+		.apply_uV	= 1,
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+		.state_mem	= {
+			.disabled = 1,
+		},
+	},
+	.num_consumer_supplies	= ARRAY_SIZE(ldo11_consumer),
+	.consumer_supplies	= ldo11_consumer,
+};
+#else
 static struct regulator_init_data aries_ldo11_data = {
 	.constraints	= {
 		.name		= "CAM_AF_3.0V",
@@ -586,6 +608,7 @@ static struct regulator_init_data aries_ldo11_data = {
 	.num_consumer_supplies	= ARRAY_SIZE(ldo11_consumer),
 	.consumer_supplies	= ldo11_consumer,
 };
+#endif
 
 static struct regulator_init_data aries_ldo12_data = {
 	.constraints	= {
@@ -647,6 +670,23 @@ static struct regulator_init_data aries_ldo15_data = {
 	.consumer_supplies	= ldo15_consumer,
 };
 
+
+#if defined (CONFIG_GALAXY_I897)
+static struct regulator_init_data aries_ldo16_data = {
+	.constraints	= {
+		.name		= "VGA_AVDD_1.8V",
+		.min_uV		= 1800000,
+		.max_uV		= 1800000,
+		.apply_uV	= 1,
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+		.state_mem	= {
+			.disabled = 1,
+		},
+	},
+	.num_consumer_supplies	= ARRAY_SIZE(ldo16_consumer),
+	.consumer_supplies	= ldo16_consumer,
+};
+#else
 static struct regulator_init_data aries_ldo16_data = {
 	.constraints	= {
 		.name		= "VGA_AVDD_2.8V",
@@ -661,6 +701,7 @@ static struct regulator_init_data aries_ldo16_data = {
 	.num_consumer_supplies	= ARRAY_SIZE(ldo16_consumer),
 	.consumer_supplies	= ldo16_consumer,
 };
+#endif
 
 static struct regulator_init_data aries_ldo17_data = {
 	.constraints	= {
@@ -684,6 +725,7 @@ static struct regulator_init_data aries_buck1_data = {
 		.min_uV		= 750000,
 		.max_uV		= 1500000,
 		.apply_uV	= 1,
+		.initial_state    = PM_SUSPEND_MEM,
 		.valid_ops_mask	= REGULATOR_CHANGE_VOLTAGE |
 				  REGULATOR_CHANGE_STATUS,
 		.state_mem	= {
@@ -702,6 +744,7 @@ static struct regulator_init_data aries_buck2_data = {
 		.min_uV		= 750000,
 		.max_uV		= 1500000,
 		.apply_uV	= 1,
+		.initial_state    = PM_SUSPEND_MEM,
 		.valid_ops_mask	= REGULATOR_CHANGE_VOLTAGE |
 				  REGULATOR_CHANGE_STATUS,
 		.state_mem	= {
@@ -1255,10 +1298,15 @@ static struct platform_device s3c_device_i2c12 = {
 	.dev.platform_data	= &i2c12_platdata,
 };
 
-#if defined(CONFIG_GALAXY_I897)
+
 static	struct	i2c_gpio_platform_data	i2c13_platdata = {
+#if defined(CONFIG_GALAXY_I897)
 	.sda_pin		= GPIO_A1026_SDA,
 	.scl_pin		= GPIO_A1026_SCL,
+#else
+	.sda_pin		= -1,
+	.scl_pin		= -1,
+#endif
 	.udelay			= 1,	/* 250KHz */		
 	.sda_is_open_drain	= 0,
 	.scl_is_open_drain	= 0,
@@ -1270,7 +1318,7 @@ static struct platform_device s3c_device_i2c13 = {
 	.id					= 13,
 	.dev.platform_data	= &i2c13_platdata,
 };
-#endif
+
 
 #if !defined(CONFIG_GALAXY_I897)
 static struct i2c_gpio_platform_data i2c14_platdata = {
@@ -1287,8 +1335,8 @@ static struct platform_device s3c_device_i2c14 = {
 	.id			= 14,
 	.dev.platform_data	= &i2c14_platdata,
 };
-
 #endif
+
 static void touch_keypad_gpio_init(void)
 {
 	int ret = 0;
@@ -2965,7 +3013,11 @@ static struct sec_jack_buttons_zone sec_jack_buttons_zones[] = {
 		/* 0 <= adc <=1000, stable zone */
 		.code		= KEY_MEDIA,
 		.adc_low	= 0,
+#if defined(CONFIG_GALAXY_I897)
+		.adc_high	= 4000,
+#else	
 		.adc_high	= 1000,
+#endif			
 	},
 };
 
@@ -3600,14 +3652,11 @@ static void __init sound_init(void)
 	reg |= 0x1;
 	__raw_writel(reg, S5P_CLK_OUT);
 
-#if !defined(CONFIG_ARIES_NTT)
+#if defined(CONFIG_GALAXY_I897) 
 	gpio_request(GPIO_MICBIAS_EN, "micbias_enable");
-#if defined(CONFIG_GALAXY_I897)
-	gpio_request(GPIO_EARMICBIAS_EN, "ear_micbias_enable");
-#endif
+	gpio_request(GPIO_EARMICBIAS_EN, "sub_micbias_enable");	
 #else
 	gpio_request(GPIO_MICBIAS_EN, "micbias_enable");
-	gpio_request(GPIO_SUB_MICBIAS_EN, "sub_micbias_enable");
 #endif
 }
 

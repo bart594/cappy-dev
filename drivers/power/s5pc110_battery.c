@@ -162,6 +162,7 @@ static enum power_supply_property s3c_power_properties[] = {
 	POWER_SUPPLY_PROP_ONLINE,
 };
 
+
 static ssize_t s3c_bat_show_attrs(struct device *dev,
 				  struct device_attribute *attr, char *buf);
 
@@ -1056,7 +1057,6 @@ static __devinit int max8998_charger_probe(struct platform_device *pdev)
 		ret = -ENOMEM;
 		goto err_wake_lock;
 	}
-
 	check_lpm_charging_mode(chg);
 
 	/* init power supplier framework */

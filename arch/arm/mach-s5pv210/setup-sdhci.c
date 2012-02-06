@@ -62,7 +62,11 @@ void s5pv210_setup_sdhci0_cfg_gpio(struct platform_device *dev, int width)
 			}
 			s3c_gpio_set_drvstrength(gpio, S3C_GPIO_DRVSTR_3X);
 		}
-		break;
+#if defined (CONFIG_GALAXY_I897) 
+		/* Chip detect pin Pull up -> none*/
+		s3c_gpio_setpull(S5PV210_GPG0(2), S3C_GPIO_PULL_NONE);
+#endif		
+break;
 	default:
 		printk(KERN_ERR "Wrong SD/MMC bus width : %d\n", width);
 	}
@@ -91,12 +95,16 @@ void s5pv210_setup_sdhci1_cfg_gpio(struct platform_device *dev, int width)
 			}
 			s3c_gpio_set_drvstrength(gpio, S3C_GPIO_DRVSTR_3X);
 		}
+#if defined (CONFIG_GALAXY_I897)
+		/* Chip detect pin Pull up -> none*/
+		s3c_gpio_setpull(S5PV210_GPG1(2), S3C_GPIO_PULL_NONE);
+#endif
+
 		break;
 	default:
 		printk(KERN_ERR "Wrong SD/MMC bus width : %d\n", width);
 	}
 }
-
 void s5pv210_setup_sdhci2_cfg_gpio(struct platform_device *dev, int width)
 {
 	unsigned int gpio;
@@ -122,7 +130,11 @@ void s5pv210_setup_sdhci2_cfg_gpio(struct platform_device *dev, int width)
 			}
 			s3c_gpio_set_drvstrength(gpio, S3C_GPIO_DRVSTR_3X);
 		}
-		break;
+#if defined (CONFIG_GALAXY_I897) 
+		/* Chip detect pin Pull up -> none*/
+		s3c_gpio_setpull(S5PV210_GPG2(2), S3C_GPIO_PULL_NONE);
+#endif		
+break;
 	default:
 		printk(KERN_ERR "Wrong SD/MMC bus width : %d\n", width);
 	}
@@ -194,9 +206,20 @@ void s5pv210_setup_sdhci_cfg_card(struct platform_device *dev,
 		if ((ios->clock > range_start) && (ios->clock < range_end))
 			ctrl3 = S3C_SDHCI_CTRL3_FCSELTX_BASIC |
 				S3C_SDHCI_CTRL3_FCSELRX_BASIC;
-		else
-			ctrl3 = S3C_SDHCI_CTRL3_FCSELTX_BASIC |
-				S3C_SDHCI_CTRL3_FCSELRX_INVERT;
+//[NAGSM_Android_HDLNC_SDcard_Seojw_20101215 :  edit high speed clock timing				
+#if defined (CONFIG_GALAXY_I897) 
+		else {
+  		         ctrl3 = S3C_SDHCI_CTRL3_FCSELTX_BASIC;
+            	 if(card->type & MMC_TYPE_SD)
+                 	ctrl3 |= S3C_SDHCI_CTRL3_FCSELRX_BASIC;
+				 else
+        			ctrl3 |= S3C_SDHCI_CTRL3_FCSELRX_INVERT;
+ 		}
+#else
+ 		else{
+ 			ctrl3 = S3C_SDHCI_CTRL3_FCSELTX_BASIC |	S3C_SDHCI_CTRL3_FCSELRX_INVERT;
+      }
+#endif		
 	}
 
 	writel(ctrl2, r + S3C_SDHCI_CONTROL2);
@@ -279,7 +302,11 @@ unsigned int universal_sdhci2_detect_ext_cd(void)
 void universal_sdhci2_cfg_ext_cd(void)
 {
 	printk(KERN_DEBUG "Universal :SD Detect configuration\n");
+#if defined (CONFIG_GALAXY_I897) 
+s3c_gpio_setpull(S5PV210_GPH3(4), S3C_GPIO_PULL_UP);
+#else
 	s3c_gpio_setpull(S5PV210_GPH3(4), S3C_GPIO_PULL_NONE);
+#endif
 	set_irq_type(IRQ_EINT(28), IRQ_TYPE_EDGE_BOTH);
 }
 

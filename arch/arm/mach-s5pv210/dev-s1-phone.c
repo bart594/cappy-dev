@@ -68,6 +68,7 @@ static struct modemctl_platform_data mdmctl_data = {
 	.gpio_phone_active = GPIO_PHONE_ACTIVE,
 	.gpio_pda_active = GPIO_PDA_ACTIVE,
 	.gpio_cp_reset = GPIO_CP_RST,
+	.gpio_sim_ndetect = 0,		/* Galaxy S does not include SIM detect pin */
 	.cfg_gpio = modemctl_cfg_gpio,
 	};
 
